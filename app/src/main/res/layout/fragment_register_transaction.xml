@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Registrar Transacción"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Tipo de transacción -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tipo"
+            android:textStyle="bold" />
+
+        <RadioGroup
+            android:id="@+id/rg_tipo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+
+            <RadioButton
+                android:id="@+id/rb_ingreso"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Ingreso" />
+
+            <RadioButton
+                android:id="@+id/rb_egreso"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Egreso"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/rb_traspaso"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Traspaso" />
+        </RadioGroup>
+
+        <!-- Concepto -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_concepto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Concepto" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Categoría -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Categoría"
+            android:layout_marginTop="16dp" />
+
+        <Spinner
+            android:id="@+id/spinner_categoria"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <!-- Subcategoría -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Subcategoría (opcional)"
+            android:layout_marginTop="16dp" />
+
+        <Spinner
+            android:id="@+id/spinner_subcategoria"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <!-- Medio de pago -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Medio de pago (opcional)"
+            android:layout_marginTop="16dp" />
+
+        <Spinner
+            android:id="@+id/spinner_medio_pago"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <!-- Cuenta origen (visible para Egreso y Traspaso) -->
+        <TextView
+            android:id="@+id/tv_cuenta_origen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cuenta origen"
+            android:layout_marginTop="16dp" />
+
+        <Spinner
+            android:id="@+id/spinner_cuenta_origen"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <!-- Cuenta destino (visible para Ingreso y Traspaso) -->
+        <TextView
+            android:id="@+id/tv_cuenta_destino"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cuenta destino"
+            android:layout_marginTop="16dp" />
+
+        <Spinner
+            android:id="@+id/spinner_cuenta_destino"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <!-- Monto -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_monto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Monto"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Fecha -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Fecha"
+            android:layout_marginTop="16dp" />
+
+        <EditText
+            android:id="@+id/et_fecha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Selecciona fecha"
+            android:focusable="false"
+            android:cursorVisible="false"
+            android:drawableStart="@android:drawable/ic_menu_today"
+            android:background="@color/white"
+            android:padding="12dp" />
+
+        <!-- Botones -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="24dp">
+
+            <Button
+                android:id="@+id/btn_guardar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Guardar"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/btn_cancelar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Cancelar"
+                android:backgroundTint="@android:color/darker_gray" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

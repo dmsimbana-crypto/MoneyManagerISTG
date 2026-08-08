@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- Fila 1: Concepto + Monto + Tipo (ícono) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <View
+                android:id="@+id/indicator_color"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/circle_green" /> <!-- o red, yellow según el monto -->
+            <TextView
+                android:id="@+id/tv_concepto"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.6"
+                android:text="Concepto"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/iv_tipo"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="8dp"
+                android:src="@android:drawable/ic_menu_info_details" /> <!-- Cambia luego por tus iconos -->
+
+            <TextView
+                android:id="@+id/tv_monto"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.4"
+                android:text="$0.00"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textAlignment="textEnd" />
+
+        </LinearLayout>
+
+        <!-- Fila 2: Categoría + Subcategoría -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:id="@+id/tv_categoria"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:text="Categoría"
+                android:textSize="14sp"
+                android:textColor="#555" />
+
+            <TextView
+                android:id="@+id/tv_subcategoria"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:text="Subcategoría"
+                android:textSize="14sp"
+                android:textColor="#555"
+                android:textAlignment="textEnd" />
+
+        </LinearLayout>
+
+        <!-- Fila 3: Medio de pago + Cuenta + Fecha -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:id="@+id/tv_medio"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.33"
+                android:text="Medio"
+                android:textSize="12sp"
+                android:textColor="#777" />
+
+            <TextView
+                android:id="@+id/tv_cuenta"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.33"
+                android:text="Cuenta"
+                android:textSize="12sp"
+                android:textColor="#777"
+                android:textAlignment="center" />
+
+            <TextView
+                android:id="@+id/tv_fecha"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.34"
+                android:text="Fecha"
+                android:textSize="12sp"
+                android:textColor="#777"
+                android:textAlignment="textEnd" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

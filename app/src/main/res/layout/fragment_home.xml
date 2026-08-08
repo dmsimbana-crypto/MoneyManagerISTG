@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#f5f5f5">
+
+    <!-- Encabezado (fijo arriba) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@color/white">
+
+            <TextView
+                android:id="@+id/tv_welcome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bienvenido, usuario"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_budget"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Presupuesto: $500.00"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tv_spent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Gastado: $0.00 (0%)"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    android:gravity="end" />
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/progress_budget"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginTop="8dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="#4CAF50" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Banner -->
+    <ImageView
+        android:id="@+id/iv_banner"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/banner"
+        android:scaleType="centerCrop"
+        app:layout_constraintTop_toBottomOf="@id/card_header" />
+
+    <!-- Barra de búsqueda -->
+    <LinearLayout
+        android:id="@+id/all_search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/border_search"
+        app:layout_constraintTop_toBottomOf="@id/iv_banner">
+
+        <EditText
+            android:id="@+id/et_search"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Buscar transacción..."
+            android:inputType="text"
+            android:padding="8dp" />
+
+        <ImageButton
+            android:id="@+id/btn_search"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_search"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Buscar" />
+
+    </LinearLayout>
+
+    <!-- Filtro por fechas -->
+    <LinearLayout
+        android:id="@+id/ll_fechas"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/all_search">
+
+        <EditText
+            android:id="@+id/et_fecha_desde"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:hint="Fecha desde"
+            android:drawableStart="@android:drawable/ic_menu_today"
+            android:focusable="false"
+            android:cursorVisible="false"
+            android:background="@drawable/border_search" />
+
+        <EditText
+            android:id="@+id/et_fecha_hasta"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:hint="Fecha hasta"
+            android:drawableStart="@android:drawable/ic_menu_today"
+            android:focusable="false"
+            android:cursorVisible="false"
+            android:background="@drawable/border_search" />
+
+    </LinearLayout>
+
+    <!-- Filtros rápidos (Chips) -->
+    <LinearLayout
+        android:id="@+id/ll_filters"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/ll_fechas">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_all"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:checkable="true"
+            android:text="Todos"
+            android:textColor="@color/white"
+            app:chipBackgroundColor="@color/chip_all"
+            app:chipIcon="@android:drawable/ic_menu_info_details"
+            app:chipIconTint="@color/white" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_food"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:checkable="true"
+            android:text="Comida"
+            android:textColor="@color/white"
+            app:chipBackgroundColor="@color/chip_food"
+            app:chipIcon="@android:drawable/ic_menu_info_details"
+            app:chipIconTint="@color/white" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_transport"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:checkable="true"
+            android:text="Transporte"
+            android:textColor="@color/white"
+            app:chipBackgroundColor="@color/chip_transport"
+            app:chipIcon="@android:drawable/ic_menu_info_details"
+            app:chipIconTint="@color/white" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_high"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checkable="true"
+            android:text="> $50"
+            android:textColor="@color/white"
+            app:chipBackgroundColor="@color/chip_high"
+            app:chipIcon="@android:drawable/ic_menu_info_details"
+            app:chipIconTint="@color/white" />
+
+    </LinearLayout>
+
+    <!-- RecyclerView (con scroll propio, ocupa el espacio restante) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_transactions"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="80dp"
+        app:layout_constraintTop_toBottomOf="@id/ll_filters"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Botón flotante (FAB) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_add"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

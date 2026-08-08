@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_login">
+
+    <fragment
+        android:id="@+id/nav_login"
+        android:name="com.GrupoD.moneymanageristg.LoginFragment"
+        android:label="Login">
+        <action
+            android:id="@+id/action_login_to_register"
+            app:destination="@id/nav_register" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_register"
+        android:name="com.GrupoD.moneymanageristg.RegisterFragment"
+        android:label="Registro">
+        <action
+            android:id="@+id/action_register_to_login"
+            app:destination="@id/nav_login" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.GrupoD.moneymanageristg.HomeFragment"
+        android:label="Inicio"
+        />
+
+
+    <!-- Los demás fragments -->
+    <fragment
+        android:id="@+id/nav_register_transaction"
+        android:name="com.GrupoD.moneymanageristg.RegisterTransactionFragment"
+        android:label="Registrar Transacción" />
+    <fragment
+        android:id="@+id/nav_categories"
+        android:name="com.GrupoD.moneymanageristg.CategoriesFragment"
+        android:label="Categorías" />
+
+    <fragment
+        android:id="@+id/nav_configuration"
+        android:name="com.GrupoD.moneymanageristg.SettingsFragment"
+        android:label="Configuración" />
+
+</navigation>

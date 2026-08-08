@@ -1,5 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Colores principales (tema) -->
+    <color name="purple_500">#6200EE</color>
+    <color name="purple_700">#3700B3</color>
+    <color name="teal_200">#03DAC5</color>
+    <color name="teal_700">#018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="red">#F44336</color>
+    <color name="yellow">#FFC107</color>
+    <color name="green">#4CAF50</color>
+
+    <!-- Colores personalizados para la app -->
+    <color name="blue_app">#304384</color>
+    <color name="blue_light">#64B5F6</color>
+    <color name="red_light">#FFCDD2</color>
+    <color name="green_light">#C8E6C9</color>
+    <color name="yellow_light">#FFF9C4</color>
+    <color name="gray_light">#F5F5F5</color>
+    <color name="gray_medium">#9E9E9E</color>
+    <color name="gray_dark">#616161</color>
+
+    <!-- Colores para chips de filtros -->
+    <color name="chip_all">#6200EE</color>
+    <color name="chip_food">#4CAF50</color>
+    <color name="chip_transport">#2196F3</color>
+    <color name="chip_high">#F44336</color>
 </resources>
