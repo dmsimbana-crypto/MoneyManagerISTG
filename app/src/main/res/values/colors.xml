@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Colores principales (tema) -->
-    <color name="purple_500">#6200EE</color>
-    <color name="purple_700">#3700B3</color>
+    <color name="purple_500">#1e4288</color>
+    <color name="purple_700">#1e4288</color>
     <color name="teal_200">#03DAC5</color>
     <color name="teal_700">#018786</color>
     <color name="black">#FF000000</color>
@@ -22,7 +22,7 @@
     <color name="gray_dark">#616161</color>
 
     <!-- Colores para chips de filtros -->
-    <color name="chip_all">#6200EE</color>
+    <color name="chip_all">#1e4288</color>
     <color name="chip_food">#4CAF50</color>
     <color name="chip_transport">#2196F3</color>
     <color name="chip_high">#F44336</color>

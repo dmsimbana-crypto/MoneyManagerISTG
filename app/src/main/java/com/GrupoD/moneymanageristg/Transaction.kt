@@ -7,7 +7,9 @@ data class Transaction(
     val subcategoria: String? = null,
     val monto: Double,
     val fecha: String,
-    val tipo: String = "Egreso", // "Ingreso", "Egreso", "Traspaso"
+    val tipo: String = "Egreso",
     val medioPago: String? = null,
-    val cuenta: String? = null
+    val cuenta: String? = null,
+    val cuentaOrigenId: Long? = null,
+    val cuentaDestinoId: Long? = null
 )

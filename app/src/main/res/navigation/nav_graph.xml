@@ -25,8 +25,11 @@
     <fragment
         android:id="@+id/nav_home"
         android:name="com.GrupoD.moneymanageristg.HomeFragment"
-        android:label="Inicio"
-        />
+        android:label="Inicio">
+        <action
+            android:id="@+id/action_nav_home_to_nav_transaction_detail"
+            app:destination="@id/nav_transaction_detail" />
+    </fragment>
 
 
     <!-- Los demás fragments -->
@@ -43,5 +46,18 @@
         android:id="@+id/nav_configuration"
         android:name="com.GrupoD.moneymanageristg.SettingsFragment"
         android:label="Configuración" />
+
+    <fragment
+        android:id="@+id/nav_transaction_detail"
+        android:name="com.GrupoD.moneymanageristg.TransactionDetailFragment"
+        android:label="Detalle de Transacción">
+        <argument
+            android:name="id_transaccion"
+            app:argType="long" />
+        <!-- NUEVA ACCIÓN PARA EDITAR -->
+        <action
+            android:id="@+id/action_nav_transaction_detail_to_nav_register_transaction"
+            app:destination="@id/nav_register_transaction" />
+    </fragment>
 
 </navigation>

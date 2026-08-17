@@ -9,8 +9,19 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
-
+        <ImageView
+            android:id="@+id/iv_logo"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:src="@drawable/logo_inicio"
+            android:scaleType="fitCenter"
+            android:contentDescription="Logo Money Manager"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="6dp" />
         <TextView
+            app:layout_constraintTop_toBottomOf="@id/iv_logo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Registrar Transacción"

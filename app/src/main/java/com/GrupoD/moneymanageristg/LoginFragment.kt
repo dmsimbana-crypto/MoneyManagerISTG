@@ -14,7 +14,7 @@ import androidx.navigation.findNavController
 import com.google.android.material.textfield.TextInputEditText
 
 class LoginFragment : Fragment() {
-
+    private lateinit var dbHelper: DatabaseHelper
     private lateinit var sharedPref: SharedPreferences
     private lateinit var etUser: TextInputEditText
     private lateinit var etPassword: TextInputEditText
@@ -30,7 +30,7 @@ class LoginFragment : Fragment() {
 
         // Inicializar SharedPreferences
         sharedPref = requireActivity().getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-
+        dbHelper = DatabaseHelper(requireContext())
         // Referencias a los elementos
         etUser = view.findViewById(R.id.et_user)
         etPassword = view.findViewById(R.id.et_password)
@@ -58,13 +58,17 @@ class LoginFragment : Fragment() {
         val pass = sharedPref.getString("contrasena", "")
         val remember = sharedPref.getBoolean("recordar", false)
 
-        if (remember && user != null && pass != null) {
+        if (remember && !user.isNullOrEmpty() && !pass.isNullOrEmpty()) {
             etUser.setText(user)
             etPassword.setText(pass)
             chkRemember.isChecked = true
+        } else {
+
+            etUser.setText("")
+            etPassword.setText("")
+            chkRemember.isChecked = false
         }
     }
-
     private fun validarLogin() {
         val user = etUser.text.toString().trim()
         val pass = etPassword.text.toString().trim()
@@ -74,28 +78,21 @@ class LoginFragment : Fragment() {
             return
         }
 
-        // Validación simple (usuario fijo admin/1234)
-        // Más adelante conectaremos con SQLite
-        if (user == "admin" && pass == "1234") {
-            // Guardar credenciales si el CheckBox está marcado
-            if (chkRemember.isChecked) {
-                sharedPref.edit().apply {
-                    putString("usuario", user)
+        if (dbHelper.validateUser(user, pass)) {
+            // Guardar el usuario SIEMPRE, independientemente del CheckBox
+            sharedPref.edit().apply {
+                putString("usuario", user)
+                if (chkRemember.isChecked) {
                     putString("contrasena", pass)
                     putBoolean("recordar", true)
-                    apply()
-                }
-            } else {
-                // Limpiar credenciales si no se marcó
-                sharedPref.edit().apply {
-                    remove("usuario")
+                } else {
                     remove("contrasena")
                     putBoolean("recordar", false)
-                    apply()
                 }
+                apply()
             }
 
-            // Navegar al Home (nav_home)
+            // Navegar al Home
             view?.findNavController()?.navigate(R.id.nav_home)
             Toast.makeText(requireContext(), "Bienvenido $user", Toast.LENGTH_SHORT).show()
         } else {

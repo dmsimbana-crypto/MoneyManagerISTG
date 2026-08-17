@@ -1,5 +1,5 @@
 package com.GrupoD.moneymanageristg
-
+import androidx.navigation.findNavController
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.SharedPreferences
@@ -90,7 +90,18 @@ class HomeFragment : Fragment() {
         }
         // Configurar RecyclerView
         rvTransactions.layoutManager = LinearLayoutManager(requireContext())
-        adapter = TransactionAdapter(emptyList())
+        adapter = TransactionAdapter(emptyList(), object : TransactionAdapter.OnTransactionClickListener {
+            override fun onTransactionClick(transactionId: Long) {
+                // Navegar al Detalle
+                val bundle = Bundle().apply {
+                    putLong("id_transaccion", transactionId)
+                }
+                view?.findNavController()?.navigate(
+                    R.id.action_nav_home_to_nav_transaction_detail,
+                    bundle
+                )
+            }
+        })
         rvTransactions.adapter = adapter
 
         // Obtener usuario logueado (desde SharedPreferences)
@@ -144,9 +155,8 @@ class HomeFragment : Fragment() {
         return view
     }
 
-    // ============================================
+
     // Cargar transacciones desde SQLite
-    // ============================================
     private fun loadTransactions(username: String) {
         etSearch.setText("")
         currentFilter = "Todos"
@@ -170,8 +180,11 @@ class HomeFragment : Fragment() {
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
         val day = calendar.get(Calendar.DAY_OF_MONTH)
+        // Si el día es 0, corregimos a 1
+        val diaCorrecto = if (day == 0) 1 else day
+        val mesCorrecto = if (day == 0) month + 1 else month
 
-        val datePicker = DatePickerDialog(
+        DatePickerDialog(
             requireContext(),
             { _, selectedYear, selectedMonth, selectedDay ->
                 val fecha = "${selectedDay.toString().padStart(2, '0')}/${
@@ -179,16 +192,14 @@ class HomeFragment : Fragment() {
                 }/$selectedYear"
                 onDateSelected(fecha)
             },
-            year, month, day
-        )
-        datePicker.show()
+            year, mesCorrecto, diaCorrecto
+        ).show()
     }
-    // ============================================
     // Actualizar resumen (presupuesto, gastado, porcentaje)
-    // ============================================
     private fun updateSummary(userId: Long) {
         // Leer presupuesto desde SharedPreferences (por defecto 500)
-        val budget = sharedPref.getFloat("presupuesto_mensual", 500.0f).toDouble()
+        val username = sharedPref.getString("usuario", "admin") ?: "admin"
+        val budget = sharedPref.getFloat("${username}_presupuesto_mensual", 500.0f).toDouble()
         tvBudget.text = "Presupuesto: $${String.format("%.2f", budget)}"
 
         // Obtener total gastado del mes
@@ -208,9 +219,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // ============================================
     // Aplicar filtros (búsqueda + filtros rápidos)
-    // ============================================
     private fun applyFilters() {
         val searchText = etSearch.text.toString().trim().lowercase()
         var filteredList = allTransactions
@@ -245,9 +254,7 @@ class HomeFragment : Fragment() {
         adapter.updateData(filteredList)
     }
 
-    // ============================================
     // Resaltar el chip seleccionado
-    // ============================================
     private fun highlightChip(selectedChip: Chip) {
         val chips = listOf(chipAll, chipFood, chipTransport, chipHigh)
         chips.forEach { chip ->

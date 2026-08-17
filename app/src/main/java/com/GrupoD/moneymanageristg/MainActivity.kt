@@ -1,4 +1,5 @@
 package com.GrupoD.moneymanageristg
+import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -43,12 +44,22 @@ class MainActivity : AppCompatActivity() {
 
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            if (destination.id == R.id.nav_login) {
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+                supportActionBar?.setDisplayHomeAsUpEnabled(false)
+                supportActionBar?.setHomeButtonEnabled(false)
+            } else {
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+                supportActionBar?.setDisplayHomeAsUpEnabled(true)
+                supportActionBar?.setHomeButtonEnabled(true)
+            }
+        }
 
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_logout -> {
-                    Toast.makeText(this, "Cerrando sesión...", Toast.LENGTH_SHORT).show()
-                    drawerLayout.closeDrawer(GravityCompat.START)
+                    cerrarSesion() // Llamar al método unificado
                     true
                 }
                 else -> {
@@ -59,7 +70,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // ✅ NUEVO: Manejo del botón de retroceso con callback
+
+
+
+
+        // Método unificado para cerrar sesión desde cualquier lugar
+
+
+        //  Manejo del botón de retroceso con callback
         val backCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -77,5 +95,37 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+
+
+    fun cerrarSesion() {
+        val sharedPref = getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+
+        // Si el usuario tenía marcado "Recordar", NO borramos las credenciales
+        // Si no estaba marcado, borramos todo
+        val recordar = sharedPref.getBoolean("recordar", false)
+        if (recordar) {
+            // Mantener usuario y contraseña, solo limpiamos la sesión activa
+            sharedPref.edit().apply {
+                putBoolean("sesion_activa", false)
+                // NO borrar "usuario", "contrasena", "recordar"
+                apply()
+            }
+        } else {
+            // Borrar todo
+            sharedPref.edit().apply {
+                remove("usuario")
+                remove("contrasena")
+                putBoolean("recordar", false)
+                putBoolean("sesion_activa", false)
+                apply()
+            }
+        }
+
+        // Navegar al Login
+        navController.navigate(R.id.nav_login)
+        drawerLayout.closeDrawer(GravityCompat.START)
+        Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show()
     }
 }

@@ -21,9 +21,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     override fun onCreate(db: SQLiteDatabase) {
-        // ============================================
+
         // 1. CREAR TABLAS
-        // ============================================
+
 
         // Tabla USUARIOS
         val createUsers = """
@@ -108,9 +108,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         """.trimIndent()
         db.execSQL(createTransactions)
 
-        // ============================================
+
+
         // 2. INSERTAR DATOS DE PRUEBA
-        // ============================================
+
+
 
         // Usuario admin
         val valuesUser = ContentValues().apply {
@@ -221,6 +223,26 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 "medio" to "Transferencia",
                 "cuenta_destino" to "Banco Pichincha",
                 "tipo" to "Ingreso"
+            ),
+            mapOf(
+                "concepto" to "ejemplo",
+                "monto" to 10.0,
+                "fecha" to "2026-08-01",
+                "categoria" to "Salario",
+                "subcategoria" to null,
+                "medio" to "Transferencia",
+                "cuenta_destino" to "Banco Pichincha",
+                "tipo" to "Ingreso"
+            ),
+            mapOf(
+                "concepto" to "ejemplo dos",
+                "monto" to 20.0,
+                "fecha" to "2026-08-01",
+                "categoria" to "Salario",
+                "subcategoria" to null,
+                "medio" to "Transferencia",
+                "cuenta_destino" to "Banco Pichincha",
+                "tipo" to "Ingreso"
             )
         )
 
@@ -284,9 +306,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         onCreate(db)
     }
 
-    // ============================================
+
+
     // MÉTODOS PARA USUARIOS (login/registro)
-    // ============================================
+
+
 
     fun userExists(username: String): Boolean {
         val db = readableDatabase
@@ -343,9 +367,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return userId
     }
 
-    // ============================================
+
+
     // MÉTODOS PARA TRANSACCIONES (Home)
-    // ============================================
 
     fun getTransactions(userId: Long): List<Transaction> {
         val transactions = mutableListOf<Transaction>()
@@ -413,14 +437,21 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
     fun getMonthlySpent(userId: Long): Double {
         val db = readableDatabase
+        val calendar = java.util.Calendar.getInstance()
+        val year = calendar.get(java.util.Calendar.YEAR)
+        val month = calendar.get(java.util.Calendar.MONTH) + 1
+        val monthStr = month.toString().padStart(2, '0')
+        val yearMonth = "$year-$monthStr" // Ejemplo: "2026-08"
+
         val query = """
-            SELECT COALESCE(SUM(monto), 0) as total
-            FROM TRANSACCIONES
-            WHERE id_usuario = ? 
-            AND tipo = 'Egreso'
-            AND strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')
-        """.trimIndent()
-        val cursor = db.rawQuery(query, arrayOf(userId.toString()))
+        SELECT COALESCE(SUM(monto), 0) as total
+        FROM TRANSACCIONES
+        WHERE id_usuario = ? 
+        AND tipo = 'Egreso'
+        AND strftime('%Y-%m', fecha) = ?
+    """.trimIndent()
+
+        val cursor = db.rawQuery(query, arrayOf(userId.toString(), yearMonth))
         var total = 0.0
         if (cursor.moveToFirst()) {
             total = cursor.getDouble(cursor.getColumnIndexOrThrow("total"))
@@ -441,24 +472,223 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         userId: Long
     ): Boolean {
         val db = writableDatabase
+        var success = false
+        try {
+            db.beginTransaction() // Iniciar transacción SQLite
+            // 1. Insertar la transacción
+            val values = ContentValues().apply {
+                put("concepto", concepto)
+                put("monto", monto)
+                put("fecha", fecha)
+                put("id_categoria", categoriaId)
+                put("id_subcategoria", subcategoriaId)
+                put("id_medio_pago", medioId)
+                put("id_cuenta_origen", cuentaOrigenId)
+                put("id_cuenta_destino", cuentaDestinoId)
+                put("tipo", tipo)
+                put("id_usuario", userId)
+            }
+            val transactionId = db.insert("TRANSACCIONES", null, values)
+            if (transactionId == -1L) {
+                return false
+            }
+
+            // 2. Actualizar saldos de las cuentas involucradas
+            when (tipo) {
+                "Ingreso" -> {
+                    cuentaDestinoId?.let { id ->
+                        // Sumar el monto a la cuenta destino
+                        val saldoActual = obtenerSaldoCuenta(id)
+                        actualizarSaldoCuenta(id, saldoActual + monto)
+                    }
+                }
+                "Egreso" -> {
+                    cuentaOrigenId?.let { id ->
+                        // Restar el monto de la cuenta origen
+                        val saldoActual = obtenerSaldoCuenta(id)
+                        if (saldoActual >= monto) {
+                            actualizarSaldoCuenta(id, saldoActual - monto)
+                        } else {
+                            // Si no hay saldo suficiente, lanzar error
+                            throw Exception("Saldo insuficiente en cuenta origen")
+                        }
+                    }
+                }
+                "Traspaso" -> {
+                    cuentaOrigenId?.let { idOrigen ->
+                        val saldoOrigen = obtenerSaldoCuenta(idOrigen)
+                        if (saldoOrigen >= monto) {
+                            actualizarSaldoCuenta(idOrigen, saldoOrigen - monto)
+                        } else {
+                            throw Exception("Saldo insuficiente en cuenta origen para traspaso")
+                        }
+                    }
+                    cuentaDestinoId?.let { idDestino ->
+                        val saldoDestino = obtenerSaldoCuenta(idDestino)
+                        actualizarSaldoCuenta(idDestino, saldoDestino + monto)
+                    }
+                }
+            }
+
+            db.setTransactionSuccessful()
+            success = true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            success = false
+        } finally {
+            db.endTransaction()
+        }
+        return success
+    }
+
+
+
+
+    // MÉTODOS PARA CATEGORÍAS Y SUBCATEGORÍAS
+
+    fun getCategories(): List<Category> {
+        val list = mutableListOf<Category>()
+        val db = readableDatabase
+        val cursor = db.query("CATEGORIAS", arrayOf("id_categoria", "nombre"), null, null, null, null, "nombre ASC")
+        while (cursor.moveToNext()) {
+            val id = cursor.getLong(0)
+            val name = cursor.getString(1)
+            list.add(Category(id, name))
+        }
+        cursor.close()
+        return list
+    }
+
+    fun getSubcategoriesByCategory(categoryId: Long): List<Subcategory> {
+        val list = mutableListOf<Subcategory>()
+        val db = readableDatabase
+        val cursor = db.query(
+            "SUBCATEGORIAS",
+            arrayOf("id_subcategoria", "nombre", "id_categoria"),
+            "id_categoria = ?",
+            arrayOf(categoryId.toString()),
+            null, null, "nombre ASC"
+        )
+        while (cursor.moveToNext()) {
+            val id = cursor.getLong(0)
+            val name = cursor.getString(1)
+            val catId = cursor.getLong(2)
+            list.add(Subcategory(id, name))  // <--- Solo 2 parámetros (id y nombre)
+        }
+        cursor.close()
+        return list
+    }
+
+    fun insertCategory(name: String): Long {
+        val db = writableDatabase
         val values = ContentValues().apply {
-            put("concepto", concepto)
-            put("monto", monto)
-            put("fecha", fecha)
-            put("id_categoria", categoriaId)
-            put("id_subcategoria", subcategoriaId)
-            put("id_medio_pago", medioId)
-            put("id_cuenta_origen", cuentaOrigenId)
-            put("id_cuenta_destino", cuentaDestinoId)
-            put("tipo", tipo)
+            put("nombre", name)
+        }
+        return db.insert("CATEGORIAS", null, values)
+    }
+
+    fun updateCategory(categoryId: Long, newName: String): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("nombre", newName)
+        }
+        val result = db.update("CATEGORIAS", values, "id_categoria = ?", arrayOf(categoryId.toString()))
+        return result > 0
+    }
+
+    fun deleteCategory(categoryId: Long): Boolean {
+        val db = writableDatabase
+        val result = db.delete("CATEGORIAS", "id_categoria = ?", arrayOf(categoryId.toString()))
+        return result > 0
+    }
+
+
+
+
+    fun updateCuentaConSaldo(cuentaId: Long, nuevoNombre: String, nuevoSaldo: Double): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("nombre", nuevoNombre)
+            put("saldo", nuevoSaldo)
+        }
+        return db.update("CUENTAS_PERSONALES", values, "id_cuenta = ?", arrayOf(cuentaId.toString())) > 0
+    }
+
+    fun insertCuentaConSaldo(nombre: String, saldo: Double, userId: Long): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("nombre", nombre)
+            put("saldo", saldo)
             put("id_usuario", userId)
         }
-        val result = db.insert("TRANSACCIONES", null, values)
+        return db.insert("CUENTAS_PERSONALES", null, values) != -1L
+    }
+
+
+
+// MÉTODOS CRUD PARA CUENTAS PERSONALES
+
+    fun insertCuenta(nombre: String, userId: Long): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("nombre", nombre)
+            put("saldo", 0.0)
+            put("id_usuario", userId)
+        }
+        return db.insert("CUENTAS_PERSONALES", null, values) != -1L
+    }
+
+    fun updateCuenta(cuentaId: Long, nuevoNombre: String, nuevoSaldo: Double): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("nombre", nuevoNombre)
+            put("saldo", nuevoSaldo)
+        }
+        return db.update("CUENTAS_PERSONALES", values, "id_cuenta = ?", arrayOf(cuentaId.toString())) > 0
+    }
+
+    fun deleteCuenta(cuentaId: Long): Boolean {
+        val db = writableDatabase
+        // Verificar si tiene transacciones asociadas
+        val cursor = db.query("TRANSACCIONES", arrayOf("id_transaccion"), "id_cuenta_origen = ? OR id_cuenta_destino = ?", arrayOf(cuentaId.toString(), cuentaId.toString()), null, null, null, "1")
+        val hasTransactions = cursor.count > 0
+        cursor.close()
+        if (hasTransactions) {
+            return false // No se puede eliminar si tiene transacciones
+        }
+        return db.delete("CUENTAS_PERSONALES", "id_cuenta = ?", arrayOf(cuentaId.toString())) > 0
+    }
+
+// MÉTODOS CRUD PARA SUBCATEGORÍAS
+
+
+    fun insertSubcategoria(nombre: String, categoryId: Long): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("nombre", nombre)
+            put("id_categoria", categoryId)
+        }
+        val result = db.insert("SUBCATEGORIAS", null, values)
         return result != -1L
     }
-    // ============================================
+
+     fun updateSubcategoria(subcategoryId: Long, nuevoNombre: String): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("nombre", nuevoNombre)
+        }
+        val result = db.update("SUBCATEGORIAS", values, "id_subcategoria = ?", arrayOf(subcategoryId.toString()))
+        return result > 0
+    }
+
+
+    fun deleteSubcategoria(subcategoryId: Long): Boolean {
+        val db = writableDatabase
+        val result = db.delete("SUBCATEGORIAS", "id_subcategoria = ?", arrayOf(subcategoryId.toString()))
+        return result > 0
+    }
+
 // MÉTODOS PARA OBTENER DATOS REALES DE LA BD
-// ============================================
 
     // Obtener todas las categorías
     fun getCategorias(): List<Pair<Long, String>> {
@@ -494,6 +724,62 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return lista
     }
 
+
+
+
+
+
+
+
+
+// MÉTODOS ADICIONALES PARA CATEGORÍAS CON TRANSACCIONES
+
+    fun categoriaTieneTransacciones(categoryId: Long): Boolean {
+        val db = readableDatabase
+        val cursor = db.query(
+            "TRANSACCIONES",
+            arrayOf("id_transaccion"),
+            "id_categoria = ?",
+            arrayOf(categoryId.toString()),
+            null, null, null, "1"
+        )
+        val has = cursor.count > 0
+        cursor.close()
+        return has
+    }
+
+    fun reasignarCategoria(categoryIdOld: Long, categoryIdNew: Long): Boolean {
+        val db = writableDatabase
+        try {
+            db.beginTransaction()
+            val values = ContentValues().apply {
+                put("id_categoria", categoryIdNew)
+            }
+            db.update("TRANSACCIONES", values, "id_categoria = ?", arrayOf(categoryIdOld.toString()))
+            db.delete("CATEGORIAS", "id_categoria = ?", arrayOf(categoryIdOld.toString()))
+            db.setTransactionSuccessful()
+            return true
+        } catch (e: Exception) {
+            return false
+        } finally {
+            db.endTransaction()
+        }
+    }
+
+    fun deleteCategoriaYTransacciones(categoryId: Long): Boolean {
+        val db = writableDatabase
+        try {
+            db.beginTransaction()
+            db.delete("TRANSACCIONES", "id_categoria = ?", arrayOf(categoryId.toString()))
+            db.delete("CATEGORIAS", "id_categoria = ?", arrayOf(categoryId.toString()))
+            db.setTransactionSuccessful()
+            return true
+        } catch (e: Exception) {
+            return false
+        } finally {
+            db.endTransaction()
+        }
+    }
     // Obtener todos los medios de pago
     fun getMediosPago(): List<Pair<Long, String>> {
         val lista = mutableListOf<Pair<Long, String>>()
@@ -507,7 +793,89 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         cursor.close()
         return lista
     }
+    fun updateTransaction(
+        transactionId: Long,
+        concepto: String,
+        monto: Double,
+        fecha: String,
+        categoriaId: Long,
+        subcategoriaId: Long?,
+        medioId: Long?,
+        cuentaOrigenId: Long?,
+        cuentaDestinoId: Long?,
+        tipo: String,
+        userId: Long
+    ): Boolean {
+        val db = writableDatabase
+        var success = false
+        try {
+            db.beginTransaction()
 
+            val original = obtenerTransaccion(transactionId)
+            if (original == null) return false
+
+            revertirSaldos(original)
+
+            val values = ContentValues().apply {
+                put("concepto", concepto)
+                put("monto", monto)
+                put("fecha", fecha)
+                put("id_categoria", categoriaId)
+                put("id_subcategoria", subcategoriaId)
+                put("id_medio_pago", medioId)
+                put("id_cuenta_origen", cuentaOrigenId)
+                put("id_cuenta_destino", cuentaDestinoId)
+                put("tipo", tipo)
+                put("id_usuario", userId)
+            }
+            val result = db.update("TRANSACCIONES", values, "id_transaccion = ?", arrayOf(transactionId.toString()))
+            if (result <= 0) {
+                return false
+            }
+
+            aplicarSaldos(
+                tipo = tipo,
+                monto = monto,
+                cuentaOrigenId = cuentaOrigenId,
+                cuentaDestinoId = cuentaDestinoId
+            )
+
+            db.setTransactionSuccessful()
+            success = true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            success = false
+        } finally {
+            db.endTransaction()
+        }
+        return success
+    }
+    fun deleteTransaction(transactionId: Long): Boolean {
+        val db = writableDatabase
+        var success = false
+        try {
+            db.beginTransaction()
+
+            val transaction = obtenerTransaccion(transactionId)
+            if (transaction == null) return false
+
+            revertirSaldos(transaction)
+
+            val result = db.delete("TRANSACCIONES", "id_transaccion = ?", arrayOf(transactionId.toString()))
+            if (result <= 0) {
+                return false
+            }
+
+            db.setTransactionSuccessful()
+            success = true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            success = false
+        } finally {
+            db.endTransaction()
+        }
+        return success
+    }
     // Obtener cuentas personales de un usuario
     fun getCuentasByUser(userId: Long): List<Pair<Long, String>> {
         val lista = mutableListOf<Pair<Long, String>>()
@@ -527,4 +895,138 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         cursor.close()
         return lista
     }
+
+
+
+// MÉTODO PARA ACTUALIZAR SALDO DE UNA CUENTA
+    fun actualizarSaldoCuenta(cuentaId: Long, nuevoSaldo: Double): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("saldo", nuevoSaldo)
+        }
+        val result = db.update("CUENTAS_PERSONALES", values, "id_cuenta = ?", arrayOf(cuentaId.toString()))
+        return result > 0
+    }
+    public fun obtenerSaldoCuenta(cuentaId: Long): Double {
+        val db = readableDatabase
+        val cursor = db.query(
+            "CUENTAS_PERSONALES",
+            arrayOf("saldo"),
+            "id_cuenta = ?",
+            arrayOf(cuentaId.toString()),
+            null, null, null
+        )
+        var saldo = 0.0
+        if (cursor.moveToFirst()) {
+            saldo = cursor.getDouble(cursor.getColumnIndexOrThrow("saldo"))
+        }
+        cursor.close()
+        return saldo
+    }
+
+
+    // Obtener una transacción por ID (para revertir saldos)
+    private fun obtenerTransaccion(transactionId: Long): Transaction? {
+        val db = readableDatabase
+        val cursor = db.query(
+            "TRANSACCIONES",
+            arrayOf("tipo", "monto", "id_cuenta_origen", "id_cuenta_destino"),
+            "id_transaccion = ?",
+            arrayOf(transactionId.toString()),
+            null, null, null
+        )
+        if (!cursor.moveToFirst()) {
+            cursor.close()
+            return null
+        }
+        val tipo = cursor.getString(0)
+        val monto = cursor.getDouble(1)
+        val cuentaOrigenId = if (!cursor.isNull(2)) cursor.getLong(2) else null
+        val cuentaDestinoId = if (!cursor.isNull(3)) cursor.getLong(3) else null
+        cursor.close()
+
+        return Transaction(
+            id = transactionId,
+            concepto = "",
+            categoria = "",
+            subcategoria = null,
+            monto = monto,
+            fecha = "",
+            tipo = tipo,
+            medioPago = null,
+            cuenta = "",
+            cuentaOrigenId = cuentaOrigenId,   // <-- ASIGNA ESTOS CAMPOS
+            cuentaDestinoId = cuentaDestinoId
+        )
+    }
+
+    // Revertir saldos de una transacción
+    private fun revertirSaldos(transaction: Transaction) {
+        when (transaction.tipo) {
+            "Ingreso" -> {
+                transaction.cuentaDestinoId?.let { id ->
+                    val saldoActual = obtenerSaldoCuenta(id)
+                    actualizarSaldoCuenta(id, saldoActual - transaction.monto)
+                }
+            }
+            "Egreso" -> {
+                transaction.cuentaOrigenId?.let { id ->
+                    val saldoActual = obtenerSaldoCuenta(id)
+                    actualizarSaldoCuenta(id, saldoActual + transaction.monto)
+                }
+            }
+            "Traspaso" -> {
+                transaction.cuentaOrigenId?.let { id ->
+                    val saldoActual = obtenerSaldoCuenta(id)
+                    actualizarSaldoCuenta(id, saldoActual + transaction.monto)
+                }
+                transaction.cuentaDestinoId?.let { id ->
+                    val saldoActual = obtenerSaldoCuenta(id)
+                    actualizarSaldoCuenta(id, saldoActual - transaction.monto)
+                }
+            }
+        }
+    }
+    // Aplicar saldos de una transacción
+    private fun aplicarSaldos(
+        tipo: String,
+        monto: Double,
+        cuentaOrigenId: Long?,
+        cuentaDestinoId: Long?
+    ) {
+        when (tipo) {
+            "Ingreso" -> {
+                cuentaDestinoId?.let { id ->
+                    val saldoActual = obtenerSaldoCuenta(id)
+                    actualizarSaldoCuenta(id, saldoActual + monto)
+                }
+            }
+            "Egreso" -> {
+                cuentaOrigenId?.let { id ->
+                    val saldoActual = obtenerSaldoCuenta(id)
+                    if (saldoActual >= monto) {
+                        actualizarSaldoCuenta(id, saldoActual - monto)
+                    } else {
+                        throw Exception("Saldo insuficiente")
+                    }
+                }
+            }
+            "Traspaso" -> {
+                cuentaOrigenId?.let { idOrigen ->
+                    val saldoOrigen = obtenerSaldoCuenta(idOrigen)
+                    if (saldoOrigen >= monto) {
+                        actualizarSaldoCuenta(idOrigen, saldoOrigen - monto)
+                    } else {
+                        throw Exception("Saldo insuficiente en origen")
+                    }
+                }
+                cuentaDestinoId?.let { idDestino ->
+                    val saldoDestino = obtenerSaldoCuenta(idDestino)
+                    actualizarSaldoCuenta(idDestino, saldoDestino + monto)
+                }
+            }
+        }
+    }
+
+
 }
